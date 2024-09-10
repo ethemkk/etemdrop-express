@@ -13,7 +13,7 @@ app.use(express.json());
 // Enable CORS with specific origin and methods
 app.use(
   cors({
-    origin: ["*"], // Allow your frontend's URL
+    origin: "*", // Allow your frontend's URL
     methods: ["GET", "POST"], // Allow specific methods
     allowedHeaders: ["Content-Type", "Authorization"],
   })
