@@ -1,15 +1,17 @@
 const express = require("express");
+const cors = require("cors"); // Import CORS middleware
 const connectDB = require("../config/db");
-const authRoutes = require("../routes/auth"); // Importing the auth routes
+const authRoutes = require("../routes/auth");
 
 const app = express();
-app.use(express.json()); // Parse incoming JSON
+app.use(express.json()); // Middleware to parse incoming JSON
+app.use(cors()); // Enable CORS for all routes by default
 
 // Connect to MongoDB
 connectDB();
 
 // Register and login routes
-app.use("/api/auth", authRoutes); // Using the auth routes under /api/auth
+app.use("/api/auth", authRoutes);
 
 // Export the app as a serverless function
 module.exports = (req, res) => {
