@@ -5,7 +5,13 @@ const authRoutes = require("../routes/auth");
 
 const app = express();
 app.use(express.json()); // Middleware to parse incoming JSON
-app.use(cors()); // Enable CORS for all routes by default
+app.use(
+  cors({
+    origin: true, // Allow any origin
+    methods: ["GET", "POST", "PUT", "DELETE"], // Allow the HTTP methods you need
+    credentials: true, // Enable credentials if needed
+  })
+);
 
 // Connect to MongoDB
 connectDB();
