@@ -1,21 +1,17 @@
 const express = require("express");
 const connectDB = require("../config/db");
-const authRoutes = require("../routes/auth");
-const dotenv = require("dotenv");
-dotenv.config();
+const authRoutes = require("../routes/auth"); // Importing the auth routes
 
 const app = express();
+app.use(express.json()); // Parse incoming JSON
 
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(express.json());
+// Register and login routes
+app.use("/api/auth", authRoutes); // Using the auth routes under /api/auth
 
-// Routes
-app.use("/api/auth", authRoutes);
-
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Export the app as a serverless function
+module.exports = (req, res) => {
+  app(req, res);
+};
