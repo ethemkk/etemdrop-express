@@ -7,9 +7,8 @@ const app = express();
 app.use(express.json()); // Middleware to parse incoming JSON
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://etemdrop.vercel.app/"], // Allow origins
+    origin: ["http://localhost:3002", "https://etemdrop.vercel.app/"], // Allow origins
     methods: ["GET", "POST", "PUT", "DELETE"], // Allow the HTTP methods you need
-    credentials: true, // Enable credentials if needed
   })
 );
 
