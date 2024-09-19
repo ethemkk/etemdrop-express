@@ -1,7 +1,7 @@
 const express = require("express");
 const User = require("../models/User"); // Import the User model
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 
 dotenv.config(); // Load environment variables
@@ -30,7 +30,8 @@ router.post("/register", async (req, res) => {
     }
 
     // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create a new user
     const user = await User.create({
@@ -60,9 +61,13 @@ router.post("/login", async (req, res) => {
   try {
     // Check if the user exists
     const user = await User.findOne({ email });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
 
     // If the user exists and the password matches
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (user && isMatch) {
       // Return the user details and JWT token
       res.json({
         _id: user._id,
