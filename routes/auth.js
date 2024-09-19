@@ -31,7 +31,6 @@ router.post("/register", async (req, res) => {
 
     // Hash the password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("Hashed Password:", hashedPassword); // Log hashed password
 
     // Create a new user
     const user = await User.create({
@@ -48,8 +47,6 @@ router.post("/register", async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    // Log the error
-    console.error("Registration Error:", error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -63,9 +60,6 @@ router.post("/login", async (req, res) => {
   try {
     // Check if the user exists
     const user = await User.findOne({ email });
-
-    // Log the user found
-    console.log("User found:", user);
 
     // If the user exists and the password matches
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -81,13 +75,8 @@ router.post("/login", async (req, res) => {
       res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
-    // Log the error
-    console.error("Login Error:", error);
     res.status(500).json({ message: error.message });
   }
 });
-
-
-
 
 module.exports = router;
