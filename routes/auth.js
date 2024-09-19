@@ -54,45 +54,40 @@ router.post("/register", async (req, res) => {
   }
 });
 
-
-// @route   POST /api/auth/register
-// @desc    Register a new user
+// @route   POST /api/auth/login
+// @desc    Login a user and return a JWT token
 // @access  Public
-router.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
   try {
-    // Check if the user already exists
-    const userExists = await User.findOne({ email });
+    // Check if the user exists
+    const user = await User.findOne({ email });
 
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+    // Log the user found
+    console.log("User found:", user);
+
+    // If the user exists and the password matches
+    if (user && (await bcrypt.compare(password, user.password))) {
+      // Return the user details and JWT token
+      res.json({
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        token: generateToken(user._id),
+      });
+    } else {
+      // Return an error for invalid credentials
+      res.status(401).json({ message: "Invalid email or password" });
     }
-
-    // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("Hashed Password:", hashedPassword); // Log hashed password
-
-    // Create a new user
-    const user = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    // Return success response with a JWT token
-    res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token: generateToken(user._id),
-    });
   } catch (error) {
     // Log the error
-    console.error("Registration Error:", error);
+    console.error("Login Error:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
+
 
 
 module.exports = router;
