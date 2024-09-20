@@ -1,87 +1,60 @@
 const express = require("express");
-const User = require("../models/User"); // Import the User model
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const dotenv = require("dotenv");
-
-dotenv.config(); // Load environment variables
-
+const bcrypt = require("bcryptjs");
+const User = require("../models/User");
 const router = express.Router();
 
-// Generate JWT token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d", // Token expiration time (e.g., 30 days)
-  });
-};
-
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
+// Kayıt işlemi
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
-
   try {
-    // Check if the user already exists
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    // Hash the password before saving
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create a new user
-    const user = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    // Return success response with a JWT token
-    res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token: generateToken(user._id),
-    });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashedPassword });
+    await user.save();
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login a user and return a JWT token
-// @access  Public
+// Giriş işlemi
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   try {
-    // Check if the user exists
     const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid password" });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // If the user exists and the password matches
-    if (user && isMatch) {
-      // Return the user details and JWT token
-      res.json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        token: generateToken(user._id),
-      });
-    } else {
-      // Return an error for invalid credentials
-      res.status(401).json({ message: "Invalid email or password" });
-    }
+    // Oturum başlat: userId'yi oturuma kaydet
+    req.session.userId = user._id;
+    res.json({ message: "Login successful" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server error" });
   }
+});
+
+// Kullanıcı bilgilerini getirme (oturum bilgisine göre)
+router.get("/me", (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  User.findById(req.session.userId, (err, user) => {
+    if (err) return res.status(500).json({ message: "Server error" });
+    res.json({ username: user.username, email: user.email });
+  });
+});
+
+// Çıkış işlemi
+router.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) return res.status(500).json({ message: "Logout failed" });
+    res.clearCookie("connect.sid"); // Cookie'yi temizle
+    res.json({ message: "Logout successful" });
+  });
 });
 
 module.exports = router;
