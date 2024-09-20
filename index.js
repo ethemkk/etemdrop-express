@@ -15,10 +15,10 @@ app.use(express.json());
 // CORS yapılandırması
 app.use(
   cors({
-    origin: [
-      "http://localhost:3002", // Lokal frontend
-      "https://etemdrop.vercel.app", // Vercel'deki frontend URL'si
-    ],
+    origin: "*", // Tüm kaynaklara izin verir
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, // Kimlik doğrulama bilgilerini (cookie) dahil et
