@@ -1,14 +1,13 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const User = require("../models/User");
+const User = require("../models/User"); // Kullanıcı modelini dahil ediyoruz
 const router = express.Router();
 
 // Kayıt işlemi
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password: hashedPassword });
+    const user = new User({ username, email, password });
     await user.save();
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -24,12 +23,13 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Oturum başlat: userId'yi oturuma kaydet
+    // Oturumu başlat ve userId'yi oturuma kaydet
     req.session.userId = user._id;
     res.json({ message: "Login successful" });
   } catch (error) {
@@ -37,7 +37,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Kullanıcı bilgilerini getirme (oturum bilgisine göre)
+// Kullanıcı oturum bilgilerini getirme
 router.get("/me", (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ message: "Not authenticated" });

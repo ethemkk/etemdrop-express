@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
-const MongoStore = require("connect-mongo"); // Oturumları MongoDB'de saklamak için
-const connectDB = require("./config/db"); // MongoDB bağlantı fonksiyonu
-require("dotenv").config(); // Çevresel değişkenler
+const MongoStore = require("connect-mongo");
+const connectDB = require("./config/db");
+require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
 
@@ -15,18 +15,12 @@ app.use(express.json());
 // CORS yapılandırması
 app.use(
   cors({
-    origin: "*", // Tüm kaynaklara izin verir
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    
+    origin: "http://localhost:3000", // Frontend URL'i buraya ekle
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, // Kimlik doğrulama bilgilerini (cookie) dahil et
   })
 );
-
-// Pre-flight (OPTIONS) isteklerini işle
-app.options("*", cors());
 
 // MongoDB'ye bağlan
 connectDB();
@@ -34,14 +28,17 @@ connectDB();
 // Oturum yapılandırması
 app.use(
   session({
-    secret: 'mySecretKey', // Güvenli bir anahtar kullan
+    secret: process.env.SESSION_SECRET, // Güvenli bir secret anahtar
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI // MongoDB oturumları saklanacak yer
     }),
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 // 24 saatlik oturum süresi
+      maxAge: 1000 * 60 * 60 * 24, // 24 saatlik oturum süresi
+      httpOnly: true, // Cookie'yi JavaScript erişiminden korur
+      secure: process.env.NODE_ENV === 'production', // Production'da HTTPS üzerinde çalışır
+      sameSite: 'lax', // CSRF koruması
     }
   })
 );
@@ -53,13 +50,6 @@ app.use("/api/auth", authRoutes);
 const PORT = process.env.PORT || 3001;
 
 // Sunucuyu başlat
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
-
-// Vercel için uygulamayı dışa aktar
-module.exports = (req, res) => {
-  app(req, res);
-};
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
