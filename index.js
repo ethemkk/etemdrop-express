@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-const connectDB = require("./config/db");
-require("dotenv").config();
+const connectDB = require("./config/db"); // MongoDB bağlantı fonksiyonu
+require("dotenv").config(); 
 
 const authRoutes = require("./routes/auth");
 
@@ -15,7 +15,7 @@ app.use(express.json());
 // CORS yapılandırması
 app.use(
   cors({
-    origin: "http://localhost:3000", // Frontend URL'i buraya ekle
+    origin: "*", // Frontend URL'i buraya ekle
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, // Kimlik doğrulama bilgilerini (cookie) dahil et
@@ -28,7 +28,7 @@ connectDB();
 // Oturum yapılandırması
 app.use(
   session({
-    secret: process.env.SESSION_SECRET, // Güvenli bir secret anahtar
+    secret: 'mySecretKey', 
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
