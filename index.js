@@ -1,55 +1,38 @@
 const express = require("express");
 const cors = require("cors");
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
-const connectDB = require("./config/db"); // MongoDB bağlantı fonksiyonu
-require("dotenv").config(); 
-
+const connectDB = require("./config/db"); // Your MongoDB connection logic
+require("dotenv").config(); // Load environment variables
 const authRoutes = require("./routes/auth");
-
 const app = express();
-
-// JSON veri işlemleri için middleware
+// Middleware to parse incoming JSON requests
 app.use(express.json());
-
-// CORS yapılandırması
+// Enable CORS to allow requests from specific origins
 app.use(
   cors({
-    origin: "*", // Frontend URL'i buraya ekle
+    origin: [
+      "http://localhost:3002", // Local frontend URL
+      "https://https://etemdrop.vercel.app", // Deployed frontend URL on Vercel
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // Kimlik doğrulama bilgilerini (cookie) dahil et
+    credentials: true, // Enable credentials if using authentication tokens or cookies
   })
 );
-
-// MongoDB'ye bağlan
+// Handle pre-flight (OPTIONS) requests for CORS
+app.options("*", cors());
+// Connect to MongoDB
 connectDB();
-
-// Oturum yapılandırması
-app.use(
-  session({
-    secret: 'mySecretKey', 
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI // MongoDB oturumları saklanacak yer
-    }),
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // 24 saatlik oturum süresi
-      httpOnly: true, // Cookie'yi JavaScript erişiminden korur
-      secure: process.env.NODE_ENV === 'production', // Production'da HTTPS üzerinde çalışır
-      sameSite: 'lax', // CSRF koruması
-    }
-  })
-);
-
-// Auth rotalarını kaydet
+// Register authentication routes
 app.use("/api/auth", authRoutes);
-
-// Lokal geliştirme veya deployment portu
+// Define the port for local development or deployment
 const PORT = process.env.PORT || 3001;
-
-// Sunucuyu başlat
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start the server in local development
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+// Export the app for serverless deployment on Vercel
+module.exports = (req, res) => {
+  app(req, res);
+};
