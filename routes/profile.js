@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User"); // Kullanıcı modeliniz
+const User = require("../models/User"); // User modelini doğru tanımladığınızdan emin olun
 
-// Kullanıcıyı ID veya Token ile bulma
+// Kullanıcı verisini çekmek için GET isteği
 router.get("/user", async (req, res) => {
   try {
-    const userId = req.user.id; // ID'yi token'dan veya başka bir kaynaktan alabilirsiniz
-    const user = await User.findById(userId).select("username"); // Sadece username'i çekiyoruz
+    const userId = req.user.id; // Örneğin, JWT'den user ID'yi çekebilirsiniz
+    const user = await User.findById(userId).select("username");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

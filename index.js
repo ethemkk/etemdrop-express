@@ -3,6 +3,7 @@ const cors = require("cors");
 const connectDB = require("./config/db"); // Your MongoDB connection logic
 require("dotenv").config(); // Load environment variables
 const authRoutes = require("./routes/auth");
+const profileRoutes = require("./routes/profile"); // Profile rotasını dahil ediyoruz
 const app = express();
 
 // WebSocket için gerekli modüller
@@ -39,6 +40,9 @@ connectDB();
 
 // Register authentication routes
 app.use("/api/auth", authRoutes);
+
+// Register profile routes
+app.use("/api/profile", profileRoutes); // Profile rotasını ekliyoruz
 
 // WebSocket bağlantısı sağlandığında
 wss.on('connection', (ws) => {
